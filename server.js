@@ -16,7 +16,7 @@ class MicrobialGame {
         });
         
         // Serve static files from client directory (NOT public)
-        this.app.use(express.static(path.join(__dirname, '../client')));
+        this.app.use(express.static(path.join(__dirname, 'client')));
         
         // Health check endpoint
         this.app.get('/health', (req, res) => {
@@ -30,7 +30,7 @@ class MicrobialGame {
         
         // Catch-all handler for SPA
         this.app.get('*', (req, res) => {
-            res.sendFile(path.join(__dirname, '../client', 'index.html'));
+            res.sendFile(path.join(__dirname, 'client', 'index.html'));
         });
 
         this.gameLogic = new GameLogic();
@@ -125,7 +125,7 @@ class MicrobialGame {
     start(port = process.env.PORT || 3000) {
         this.server.listen(port, () => {
             console.log(`🧫 Microbial Growth Game server running on port ${port}`);
-            console.log(`📁 Serving files from: ${path.join(__dirname, '../client')}`);
+            console.log(`📁 Serving files from: ${path.join(__dirname, 'client')}`);
         });
     }
 }
