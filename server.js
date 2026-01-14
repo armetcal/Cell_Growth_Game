@@ -15,20 +15,16 @@ class MicrobialGame {
             }
         });
         
-        // Serve static files from client directory (NOT public)
         this.app.use(express.static(path.join(__dirname, 'client')));
         
-        // Health check endpoint
         this.app.get('/health', (req, res) => {
             res.json({ 
                 status: 'OK', 
-                message: 'Microbial Growth Game Server',
                 players: this.gameState.players?.size || 0,
                 population: this.gameState.cells?.length || 0
             });
         });
         
-        // Catch-all handler for SPA
         this.app.get('*', (req, res) => {
             res.sendFile(path.join(__dirname, 'client', 'index.html'));
         });
@@ -60,30 +56,9 @@ class MicrobialGame {
                 this.handlePlayerMovement(socket.id, direction);
             });
 
-            // ADD SIMPLE RESTART HANDLER
             socket.on('restartGame', () => {
                 console.log(`Game restart requested by player: ${socket.id}`);
-                
-                // Simple restart - clear everything and restart
-                this.gameState = {
-                    cells: [],
-                    dots: [],
-                    players: this.gameState.players, // Keep player connections
-                    phase: 'lag',
-                    populationHistory: [],
-                    gameStartTime: Date.now()
-                };
-                
-                this.gameLogic.initializeGame(this.gameState);
-                
-                // Re-add all players
-                this.gameState.players.forEach((socket, playerId) => {
-                    const initialCell = this.gameLogic.createInitialCell(playerId);
-                    this.gameState.cells.push(initialCell);
-                });
-                
-                this.io.emit('gameRestarted');
-                this.io.emit('gameState', this.getClientGameState());
+                this.restartGame();
             });
 
             socket.on('disconnect', () => {
@@ -115,16 +90,35 @@ class MicrobialGame {
     initGame() {
         this.gameLogic.initializeGame(this.gameState);
 
-        // Game loop
         setInterval(() => {
             this.gameLogic.updateGame(this.gameState);
             this.io.emit('gameUpdate', this.getClientGameState());
         }, 1000 / 60);
 
-        // Population tracking
         setInterval(() => {
             this.trackPopulation();
         }, 1000);
+    }
+
+    restartGame() {
+        this.gameState = {
+            cells: [],
+            dots: [],
+            players: this.gameState.players,
+            phase: 'lag',
+            populationHistory: [],
+            gameStartTime: Date.now()
+        };
+        
+        this.gameLogic.initializeGame(this.gameState);
+        
+        this.gameState.players.forEach((socket, playerId) => {
+            const initialCell = this.gameLogic.createInitialCell(playerId);
+            this.gameState.cells.push(initialCell);
+        });
+        
+        this.io.emit('gameRestarted');
+        this.io.emit('gameState', this.getClientGameState());
     }
 
     trackPopulation() {
@@ -150,12 +144,10 @@ class MicrobialGame {
 
     start(port = process.env.PORT || 3000) {
         this.server.listen(port, () => {
-            console.log(`🧫 Microbial Growth Game server running on port ${port}`);
-            console.log(`📁 Serving files from: ${path.join(__dirname, 'client')}`);
+            console.log(`🧫 Server running on port ${port}`);
         });
     }
 }
 
-// Create and start the game
 const game = new MicrobialGame();
 game.start();
