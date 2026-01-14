@@ -5,7 +5,7 @@ class GameClient {
         this.chartCanvas = document.getElementById('growthChart');
         this.chartCtx = this.chartCanvas.getContext('2d');
         
-        this.socket = io('https://your-microbial-game.up.railway.app');
+        this.socket = io('https://cellgrowthgame.up.railway.app');
         this.gameState = {
             cells: [],
             dots: [],
