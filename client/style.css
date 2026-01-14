@@ -71,28 +71,26 @@ h1 {
     padding: 12px 24px;
     font-size: 1.2em;
     font-weight: bold;
-    background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+    background: #ff6b6b;
     color: white;
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+    transition: transform 0.2s ease; 
+    will-change: transform;
 }
 
 .restart-btn:hover {
-    background: linear-gradient(135deg, #ff5252, #e53935);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+    background: #ff5252;
+    transform: scale(1.05);
 }
 
 .restart-btn:active {
-    transform: translateY(0);
+    transform: scale(0.95);
 }
 
 .restart-btn:disabled {
     background: #666;
     cursor: not-allowed;
     transform: none;
-    box-shadow: none;
 }

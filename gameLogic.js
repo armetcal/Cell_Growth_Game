@@ -24,6 +24,8 @@ class GameLogic {
                 death: 0.01
             }
         };
+        
+        this.playerColors = new Map();
     }
 
     // Generate unique IDs
@@ -31,19 +33,27 @@ class GameLogic {
         return Math.random().toString(36).substr(2, 9);
     }
 
-    // Create initial cell for new player
+    // Initial cell for each player
     createInitialCell(playerId) {
+        // Get unique color for each player
+        if (!this.playerColors.has(playerId)) {
+            this.playerColors.set(playerId, this.getUniquePlayerColor());
+        }
+        
+        const playerColor = this.playerColors.get(playerId);
+        
         return {
             id: this.generateId(),
             playerId: playerId,
             x: Math.random() * (this.config.canvasWidth - 100) + 50,
             y: Math.random() * (this.config.canvasHeight - 100) + 50,
             size: this.config.cellSizes.lag,
-            speed: this.config.speeds.base,  // Single speed
+            speed: this.config.speeds.base,
             direction: { x: 0, y: 0 },
             adaptationDots: 0,
             isAdapted: false,
-            color: this.getRandomColor(),
+            color: playerColor, // Use unique player color
+            isOriginal: true,   // Mark as original cell
             lastDotCollectTime: Date.now()
         };
     }
@@ -179,14 +189,15 @@ class GameLogic {
             x: parentCell.x + Math.cos(angle) * distance,
             y: parentCell.y + Math.sin(angle) * distance,
             size: this.config.cellSizes.adapted,
-            speed: this.config.speeds.base,  // Same speed
+            speed: this.config.speeds.base,
             direction: {
                 x: Math.cos(angle) + (Math.random() - 0.5) * 0.5,
                 y: Math.sin(angle) + (Math.random() - 0.5) * 0.5
             },
             adaptationDots: 0,
-            isAdapted: true,  // New cells spawn already adapted
-            color: parentCell.color,
+            isAdapted: true,
+            color: '#00ffff', // All replicated cells are cyan
+            isOriginal: false, // Mark as replicated
             lastDotCollectTime: Date.now()
         };
 
@@ -286,6 +297,39 @@ class GameLogic {
             gameState.dots.push(this.createDot());
         }
         gameState.phase = 'lag';
+    }
+
+    // New method for unique player colors
+    getUniquePlayerColor() {
+        const playerColors = [
+            '#FF6B6B', // Red
+            '#4ECDC4', // Teal
+            '#FFD166', // Yellow
+            '#06D6A0', // Green
+            '#118AB2', // Blue
+            '#9B5DE5', // Purple
+            '#F15BB5', // Pink
+            '#00BBF9', // Light Blue
+            '#FB5607', // Orange
+            '#8338EC'  // Violet
+        ];
+        
+        // Return a color that hasn't been used much
+        const usedColors = Array.from(this.playerColors.values());
+        const availableColors = playerColors.filter(color => !usedColors.includes(color));
+        
+        if (availableColors.length > 0) {
+            return availableColors[Math.floor(Math.random() * availableColors.length)];
+        }
+        
+        // If all colors used, return random one
+        return playerColors[Math.floor(Math.random() * playerColors.length)];
+    }
+
+    // Update restartGame to clear player colors too
+    restartGame(gameState) {
+        this.playerColors.clear(); // Clear player color mappings
+        // ... rest of restart logic ...
     }
 }
 

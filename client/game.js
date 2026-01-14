@@ -16,9 +16,22 @@ class GameClient {
         this.playerId = null;
         this.keys = {};
         this.lastUpdate = Date.now();
-        this.restartButton = document.getElementById('restartButton');
+        
+        // Defer button setup to minimize initial load
+        setTimeout(() => this.setupRestartButton(), 100);
         
         this.init();
+    }
+
+    setupRestartButton() {
+        this.restartButton = document.getElementById('restartButton');
+        if (this.restartButton) {
+            // Use passive event listener for better performance
+            this.restartButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.restartGame();
+            }, { passive: true });
+        }
     }
 
     init() {
@@ -138,21 +151,29 @@ class GameClient {
 
         // Draw cells
         this.gameState.cells.forEach(cell => {
-            // Different colors based on phase and adaptation
+            // Use original player color for original cells, cyan for replicated
             if (cell.playerId === this.playerId) {
-                this.ctx.fillStyle = cell.isAdapted ? '#00ffff' : '#ff9900';
+                // Player's own cells - highlight
+                this.ctx.fillStyle = cell.isOriginal ? cell.color : '#00ffff';
+                this.ctx.strokeStyle = '#ffffff';
+                this.ctx.lineWidth = 2;
             } else {
-                this.ctx.fillStyle = cell.isAdapted ? '#0099ff' : '#ff6600';
+                // Other players' cells
+                this.ctx.fillStyle = cell.isOriginal ? cell.color : '#0099ff';
+                this.ctx.strokeStyle = '#666666';
+                this.ctx.lineWidth = 1;
             }
 
             this.ctx.beginPath();
             this.ctx.arc(cell.x, cell.y, cell.size, 0, Math.PI * 2);
             this.ctx.fill();
+            this.ctx.stroke(); // Add outline for visibility
 
-            // Draw nucleus/detail
-            this.ctx.fillStyle = '#ffffff';
+            // Draw nucleus/detail (smaller for replicated cells)
+            const nucleusSize = cell.isOriginal ? cell.size / 2.5 : cell.size / 3;
+            this.ctx.fillStyle = cell.isOriginal ? '#ffffff' : '#e6e6e6';
             this.ctx.beginPath();
-            this.ctx.arc(cell.x, cell.y, cell.size / 3, 0, Math.PI * 2);
+            this.ctx.arc(cell.x, cell.y, nucleusSize, 0, Math.PI * 2);
             this.ctx.fill();
         });
 
