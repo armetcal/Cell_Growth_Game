@@ -1,7 +1,6 @@
 const express = require('express');
 const http = require('http');
 const socketIO = require('socket.io');
-const cors = require('cors');
 const path = require('path');
 const GameLogic = require('./gameLogic.js');
 
@@ -15,6 +14,24 @@ class MicrobialGame {
                 methods: ["GET", "POST"]
             }
         });
+        
+        // Serve static files from client directory (NOT public)
+        this.app.use(express.static(path.join(__dirname, '../client')));
+        
+        // Health check endpoint
+        this.app.get('/health', (req, res) => {
+            res.json({ 
+                status: 'OK', 
+                message: 'Microbial Growth Game Server',
+                players: this.gameState.players?.size || 0,
+                population: this.gameState.cells?.length || 0
+            });
+        });
+        
+        // Catch-all handler for SPA
+        this.app.get('*', (req, res) => {
+            res.sendFile(path.join(__dirname, '../client', 'index.html'));
+        });
 
         this.gameLogic = new GameLogic();
         this.gameState = {
@@ -26,27 +43,8 @@ class MicrobialGame {
             gameStartTime: Date.now()
         };
 
-        this.setupExpress();
         this.setupSocketIO();
         this.initGame();
-    }
-
-    setupExpress() {
-        this.app.use(cors());
-        this.app.use(express.static(path.join(__dirname, '../client')));
-
-        this.app.get('/', (req, res) => {
-            res.sendFile(path.join(__dirname, '../client/index.html'));
-        });
-
-        this.app.get('/health', (req, res) => {
-            res.json({ 
-                status: 'OK', 
-                players: this.gameState.players.size,
-                population: this.gameState.cells.length,
-                phase: this.gameState.phase
-            });
-        });
     }
 
     setupSocketIO() {
@@ -91,13 +89,13 @@ class MicrobialGame {
     initGame() {
         this.gameLogic.initializeGame(this.gameState);
 
-        // Game loop - 60 FPS
+        // Game loop
         setInterval(() => {
             this.gameLogic.updateGame(this.gameState);
             this.io.emit('gameUpdate', this.getClientGameState());
         }, 1000 / 60);
 
-        // Population tracking - every second
+        // Population tracking
         setInterval(() => {
             this.trackPopulation();
         }, 1000);
@@ -110,7 +108,6 @@ class MicrobialGame {
             phase: this.gameState.phase
         });
 
-        // Keep only last 300 data points (5 minutes)
         if (this.gameState.populationHistory.length > 300) {
             this.gameState.populationHistory.shift();
         }
@@ -128,12 +125,11 @@ class MicrobialGame {
     start(port = process.env.PORT || 3000) {
         this.server.listen(port, () => {
             console.log(`🧫 Microbial Growth Game server running on port ${port}`);
-            console.log(`🎮 Game phases: Lag → Exponential → Stationary → Death`);
-            console.log(`🌐 Socket.IO ready for real-time multiplayer`);
+            console.log(`📁 Serving files from: ${path.join(__dirname, '../client')}`);
         });
     }
 }
 
-// Start the game
+// Create and start the game
 const game = new MicrobialGame();
 game.start();
