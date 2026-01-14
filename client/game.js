@@ -5,9 +5,7 @@ class GameClient {
         this.chartCanvas = document.getElementById('growthChart');
         this.chartCtx = this.chartCanvas.getContext('2d');
         
-        // FIXED: Connect to same domain automatically
         this.socket = io();
-        
         this.gameState = {
             cells: [],
             dots: [],
@@ -18,12 +16,14 @@ class GameClient {
         this.playerId = null;
         this.keys = {};
         this.lastUpdate = Date.now();
-        this.restartButton = document.getElementById('restartButton');
         
         this.init();
     }
 
     init() {
+        // Setup restart button FIRST
+        this.setupRestartButton();
+        
         // Socket event handlers
         this.socket.on('connect', () => {
             console.log('Connected to server');
@@ -31,7 +31,6 @@ class GameClient {
         });
 
         this.socket.on('gameState', (state) => {
-            console.log('Received game state with cells:', state.cells?.length, 'dots:', state.dots?.length);
             this.gameState = state;
             this.updateUI();
         });
@@ -48,12 +47,7 @@ class GameClient {
         });
 
         this.socket.on('gameRestarted', () => {
-            console.log('Game has been restarted');
-        });
-        
-        this.socket.on('restartDenied', (message) => {
-            alert(`Restart denied: ${message}`);
-            this.restartButton.disabled = false;
+            console.log('Game restarted');
         });
 
         // Keyboard controls
@@ -68,24 +62,24 @@ class GameClient {
             this.keys[e.key] = false;
         });
 
-        // Restart button handler
-        if (this.restartButton) {
-            this.restartButton.onclick = () => this.restartGame();
-        }
-
-        // Start game loop
         this.gameLoop();
         this.chartLoop();
     }
 
-    restartGame() {
-        if (confirm('Are you sure you want to restart the game? This will reset for all players.')) {
-            this.socket.emit('restartGame');
-            this.restartButton.disabled = true;
+    setupRestartButton() {
+        const button = document.getElementById('restartButton');
+        if (button) {
+            // Remove any existing handlers first
+            button.replaceWith(button.cloneNode(true));
+            const newButton = document.getElementById('restartButton');
             
-            setTimeout(() => {
-                this.restartButton.disabled = false;
-            }, 3000);
+            newButton.onclick = () => {
+                if (confirm('Restart game for all players?')) {
+                    this.socket.emit('restartGame');
+                    newButton.disabled = true;
+                    setTimeout(() => newButton.disabled = false, 2000);
+                }
+            };
         }
     }
 

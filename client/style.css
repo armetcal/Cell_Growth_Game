@@ -56,31 +56,29 @@ h1 {
     color: #aaa;
 }
 
+/* Remove all the complex button styles and replace with: */
 .restart-btn {
     margin: 15px 0;
-    padding: 12px 24px;
-    font-size: 1.2em;
-    font-weight: bold;
-    background: #ff6b6b;
+    padding: 10px 20px;
+    font-size: 1em;
+    background: #ff4444;
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 5px;
     cursor: pointer;
 }
 
 .restart-btn:hover {
-    background: #ff5252;
-    transform: scale(1.05);
-}
-
-.restart-btn:active {
-    transform: scale(0.95);
+    background: #cc0000;
 }
 
 .restart-btn:disabled {
     background: #666;
     cursor: not-allowed;
-    transform: none;
+}
+
+.restart-btn:active {
+    transform: scale(0.95);
 }
 
 #growthChartContainer {
