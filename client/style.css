@@ -1,0 +1,67 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 100%);
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#gameContainer {
+    text-align: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 15px;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+}
+
+h1 {
+    color: #00ffff;
+    margin-bottom: 20px;
+    font-size: 2.5em;
+    text-shadow: 0 0 10px cyan;
+}
+
+#gameInfo {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 10px;
+}
+
+#gameInfo div {
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+#gameCanvas {
+    border: 3px solid #00ffff;
+    border-radius: 10px;
+    background: #000;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+}
+
+#controls {
+    margin: 15px 0;
+    font-size: 1.1em;
+    color: #aaa;
+}
+
+#growthChartContainer {
+    margin-top: 20px;
+}
+
+#growthChart {
+    border: 2px solid #444;
+    border-radius: 5px;
+    background: #111;
+}

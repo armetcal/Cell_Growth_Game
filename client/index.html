@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microbial Growth Simulator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <h1>🧫 Microbial Growth Simulator</h1>
+        <div id="gameInfo">
+            <div>Players Online: <span id="playerCount">0</span></div>
+            <div>Population: <span id="population">0</span></div>
+            <div>Phase: <span id="phase">Lag Phase</span></div>
+            <div>Dots Collected: <span id="dotsCollected">0</span></div>
+        </div>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="controls">
+            Use Arrow Keys to Move • Collect Green Dots to Grow • Each Dot = One Cell
+        </div>
+        <div id="growthChartContainer">
+            <canvas id="growthChart" width="800" height="200"></canvas>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
