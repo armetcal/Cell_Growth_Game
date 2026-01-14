@@ -16,22 +16,9 @@ class GameClient {
         this.playerId = null;
         this.keys = {};
         this.lastUpdate = Date.now();
-        
-        // Defer button setup to minimize initial load
-        setTimeout(() => this.setupRestartButton(), 100);
+        this.restartButton = document.getElementById('restartButton');
         
         this.init();
-    }
-
-    setupRestartButton() {
-        this.restartButton = document.getElementById('restartButton');
-        if (this.restartButton) {
-            // Use passive event listener for better performance
-            this.restartButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.restartGame();
-            }, { passive: true });
-        }
     }
 
     init() {
@@ -42,25 +29,24 @@ class GameClient {
         });
 
         this.socket.on('gameState', (state) => {
+            console.log('Received game state:', state);
             this.gameState = state;
             this.updateUI();
         });
 
         this.socket.on('gameUpdate', (update) => {
-            this.gameState.cells = update.cells;
-            this.gameState.dots = update.dots;
-            this.gameState.phase = update.phase;
-            this.gameState.populationHistory = update.populationHistory;
+            this.gameState.cells = update.cells || [];
+            this.gameState.dots = update.dots || [];
+            this.gameState.phase = update.phase || 'lag';
+            this.gameState.populationHistory = update.populationHistory || [];
         });
 
         this.socket.on('playerCount', (count) => {
             document.getElementById('playerCount').textContent = count;
         });
 
-        // ADD RESTART HANDLERS
         this.socket.on('gameRestarted', () => {
             console.log('Game has been restarted');
-            // The next gameUpdate will contain the fresh game state
         });
         
         this.socket.on('restartDenied', (message) => {
@@ -81,22 +67,20 @@ class GameClient {
         });
 
         // Restart button handler
-        this.restartButton.addEventListener('click', () => {
-            this.restartGame();
-        });
+        if (this.restartButton) {
+            this.restartButton.onclick = () => this.restartGame();
+        }
 
         // Start game loop
         this.gameLoop();
         this.chartLoop();
     }
 
-    // Add restart method
     restartGame() {
         if (confirm('Are you sure you want to restart the game? This will reset for all players.')) {
             this.socket.emit('restartGame');
             this.restartButton.disabled = true;
             
-            // Re-enable button after 3 seconds to prevent spamming
             setTimeout(() => {
                 this.restartButton.disabled = false;
             }, 3000);
@@ -111,7 +95,6 @@ class GameClient {
         if (this.keys['ArrowLeft']) direction.x = -1;
         if (this.keys['ArrowRight']) direction.x = 1;
 
-        // Normalize diagonal movement
         const length = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
         if (length > 0) {
             direction.x /= length;
@@ -141,41 +124,41 @@ class GameClient {
         this.ctx.fillStyle = '#000';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // Draw dots
-        this.gameState.dots.forEach(dot => {
-            this.ctx.fillStyle = '#00ff00'; // Always green
-            this.ctx.beginPath();
-            this.ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
-            this.ctx.fill();
-        });
+        // Draw dots - CRITICAL: Check if dots exist
+        if (this.gameState.dots && Array.isArray(this.gameState.dots)) {
+            this.gameState.dots.forEach(dot => {
+                if (dot && dot.x !== undefined && dot.y !== undefined) {
+                    this.ctx.fillStyle = '#00ff00';
+                    this.ctx.beginPath();
+                    this.ctx.arc(dot.x, dot.y, dot.radius || 5, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+            });
+        }
 
-        // Draw cells
-        this.gameState.cells.forEach(cell => {
-            // Use original player color for original cells, cyan for replicated
-            if (cell.playerId === this.playerId) {
-                // Player's own cells - highlight
-                this.ctx.fillStyle = cell.isOriginal ? cell.color : '#00ffff';
-                this.ctx.strokeStyle = '#ffffff';
-                this.ctx.lineWidth = 2;
-            } else {
-                // Other players' cells
-                this.ctx.fillStyle = cell.isOriginal ? cell.color : '#0099ff';
-                this.ctx.strokeStyle = '#666666';
-                this.ctx.lineWidth = 1;
-            }
+        // Draw cells - CRITICAL: Check if cells exist
+        if (this.gameState.cells && Array.isArray(this.gameState.cells)) {
+            this.gameState.cells.forEach(cell => {
+                if (cell && cell.x !== undefined && cell.y !== undefined) {
+                    // Different colors based on player and cell type
+                    if (cell.playerId === this.playerId) {
+                        this.ctx.fillStyle = cell.isOriginal ? (cell.color || '#00ffff') : '#00ffff';
+                    } else {
+                        this.ctx.fillStyle = cell.isOriginal ? (cell.color || '#0099ff') : '#0099ff';
+                    }
 
-            this.ctx.beginPath();
-            this.ctx.arc(cell.x, cell.y, cell.size, 0, Math.PI * 2);
-            this.ctx.fill();
-            this.ctx.stroke(); // Add outline for visibility
+                    this.ctx.beginPath();
+                    this.ctx.arc(cell.x, cell.y, cell.size || 15, 0, Math.PI * 2);
+                    this.ctx.fill();
 
-            // Draw nucleus/detail (smaller for replicated cells)
-            const nucleusSize = cell.isOriginal ? cell.size / 2.5 : cell.size / 3;
-            this.ctx.fillStyle = cell.isOriginal ? '#ffffff' : '#e6e6e6';
-            this.ctx.beginPath();
-            this.ctx.arc(cell.x, cell.y, nucleusSize, 0, Math.PI * 2);
-            this.ctx.fill();
-        });
+                    // Draw nucleus
+                    this.ctx.fillStyle = '#ffffff';
+                    this.ctx.beginPath();
+                    this.ctx.arc(cell.x, cell.y, (cell.size || 15) / 3, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+            });
+        }
 
         // Draw phase indicator
         this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
@@ -195,11 +178,10 @@ class GameClient {
         const ctx = this.chartCtx;
         const canvas = this.chartCanvas;
         
-        // Clear chart
         ctx.fillStyle = '#111';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        if (this.gameState.populationHistory.length < 2) return;
+        if (!this.gameState.populationHistory || this.gameState.populationHistory.length < 2) return;
 
         // Draw grid
         ctx.strokeStyle = '#333';
@@ -218,8 +200,7 @@ class GameClient {
         ctx.beginPath();
 
         const maxPopulation = Math.max(...this.gameState.populationHistory.map(p => p.population));
-        const timeRange = 300; // Show last 5 minutes
-
+        
         this.gameState.populationHistory.forEach((point, index) => {
             const x = (index / this.gameState.populationHistory.length) * canvas.width;
             const y = canvas.height - (point.population / Math.max(maxPopulation, 1)) * canvas.height;
@@ -233,7 +214,6 @@ class GameClient {
 
         ctx.stroke();
 
-        // Label phases if identifiable
         if (this.gameState.populationHistory.length > 10) {
             ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
             ctx.font = '12px Arial';

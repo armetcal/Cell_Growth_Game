@@ -56,16 +56,6 @@ h1 {
     color: #aaa;
 }
 
-#growthChartContainer {
-    margin-top: 20px;
-}
-
-#growthChart {
-    border: 2px solid #444;
-    border-radius: 5px;
-    background: #111;
-}
-
 .restart-btn {
     margin: 15px 0;
     padding: 12px 24px;
@@ -76,8 +66,6 @@ h1 {
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: transform 0.2s ease; 
-    will-change: transform;
 }
 
 .restart-btn:hover {
@@ -93,4 +81,14 @@ h1 {
     background: #666;
     cursor: not-allowed;
     transform: none;
+}
+
+#growthChartContainer {
+    margin-top: 20px;
+}
+
+#growthChart {
+    border: 2px solid #444;
+    border-radius: 5px;
+    background: #111;
 }

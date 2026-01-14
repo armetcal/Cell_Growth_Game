@@ -15,7 +15,7 @@ class MicrobialGame {
             }
         });
         
-        this.app.use(express.static(path.join(__dirname, 'client')));
+        this.app.use(express.static(path.join(__dirname, '../client')));
         
         this.app.get('/health', (req, res) => {
             res.json({ 
@@ -26,7 +26,7 @@ class MicrobialGame {
         });
         
         this.app.get('*', (req, res) => {
-            res.sendFile(path.join(__dirname, 'client', 'index.html'));
+            res.sendFile(path.join(__dirname, '../client', 'index.html'));
         });
 
         this.gameLogic = new GameLogic();
