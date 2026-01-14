@@ -15,7 +15,8 @@ class MicrobialGame {
             }
         });
         
-        this.app.use(express.static(path.join(__dirname, '../client')));
+        // FIXED PATH: Serve from ./client (same level)
+        this.app.use(express.static(path.join(__dirname, 'client')));
         
         this.app.get('/health', (req, res) => {
             res.json({ 
@@ -26,7 +27,8 @@ class MicrobialGame {
         });
         
         this.app.get('*', (req, res) => {
-            res.sendFile(path.join(__dirname, '../client', 'index.html'));
+            // FIXED PATH: Serve from ./client
+            res.sendFile(path.join(__dirname, 'client', 'index.html'));
         });
 
         this.gameLogic = new GameLogic();
@@ -88,7 +90,6 @@ class MicrobialGame {
     }
 
     initGame() {
-        // FIXED: Use the correct method name
         this.gameLogic.initializeGame(this.gameState);
 
         setInterval(() => {
@@ -111,7 +112,6 @@ class MicrobialGame {
             gameStartTime: Date.now()
         };
         
-        // FIXED: Use the correct method name
         this.gameLogic.initializeGame(this.gameState);
         this.gameLogic.restartGame(this.gameState);
         
@@ -148,6 +148,7 @@ class MicrobialGame {
     start(port = process.env.PORT || 3000) {
         this.server.listen(port, () => {
             console.log(`🧫 Server running on port ${port}`);
+            console.log(`📁 Serving files from: ${path.join(__dirname, 'client')}`);
         });
     }
 }

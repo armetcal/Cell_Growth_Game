@@ -5,7 +5,9 @@ class GameClient {
         this.chartCanvas = document.getElementById('growthChart');
         this.chartCtx = this.chartCanvas.getContext('2d');
         
+        // FIXED: Connect to same domain automatically
         this.socket = io();
+        
         this.gameState = {
             cells: [],
             dots: [],
@@ -29,7 +31,7 @@ class GameClient {
         });
 
         this.socket.on('gameState', (state) => {
-            console.log('Received game state:', state);
+            console.log('Received game state with cells:', state.cells?.length, 'dots:', state.dots?.length);
             this.gameState = state;
             this.updateUI();
         });
@@ -124,7 +126,7 @@ class GameClient {
         this.ctx.fillStyle = '#000';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // Draw dots - CRITICAL: Check if dots exist
+        // Draw dots
         if (this.gameState.dots && Array.isArray(this.gameState.dots)) {
             this.gameState.dots.forEach(dot => {
                 if (dot && dot.x !== undefined && dot.y !== undefined) {
@@ -136,11 +138,10 @@ class GameClient {
             });
         }
 
-        // Draw cells - CRITICAL: Check if cells exist
+        // Draw cells
         if (this.gameState.cells && Array.isArray(this.gameState.cells)) {
             this.gameState.cells.forEach(cell => {
                 if (cell && cell.x !== undefined && cell.y !== undefined) {
-                    // Different colors based on player and cell type
                     if (cell.playerId === this.playerId) {
                         this.ctx.fillStyle = cell.isOriginal ? (cell.color || '#00ffff') : '#00ffff';
                     } else {
@@ -183,7 +184,6 @@ class GameClient {
 
         if (!this.gameState.populationHistory || this.gameState.populationHistory.length < 2) return;
 
-        // Draw grid
         ctx.strokeStyle = '#333';
         ctx.lineWidth = 1;
         for (let i = 0; i <= 4; i++) {
@@ -194,7 +194,6 @@ class GameClient {
             ctx.stroke();
         }
 
-        // Draw growth curve
         ctx.strokeStyle = '#00ff00';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -222,7 +221,6 @@ class GameClient {
     }
 }
 
-// Initialize game when page loads
 window.addEventListener('load', () => {
     new GameClient();
 });
