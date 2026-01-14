@@ -88,6 +88,7 @@ class MicrobialGame {
     }
 
     initGame() {
+        // FIXED: Use the correct method name
         this.gameLogic.initializeGame(this.gameState);
 
         setInterval(() => {
@@ -110,7 +111,9 @@ class MicrobialGame {
             gameStartTime: Date.now()
         };
         
+        // FIXED: Use the correct method name
         this.gameLogic.initializeGame(this.gameState);
+        this.gameLogic.restartGame(this.gameState);
         
         this.gameState.players.forEach((socket, playerId) => {
             const initialCell = this.gameLogic.createInitialCell(playerId);
