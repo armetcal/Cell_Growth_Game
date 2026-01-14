@@ -100,7 +100,7 @@ class GameClient {
 
         // Draw dots
         this.gameState.dots.forEach(dot => {
-            this.ctx.fillStyle = dot.type === 'adaptation' ? '#ffff00' : '#00ff00';
+            this.ctx.fillStyle = '#00ff00'; // green
             this.ctx.beginPath();
             this.ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
             this.ctx.fill();

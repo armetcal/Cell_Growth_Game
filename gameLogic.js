@@ -3,25 +3,24 @@ class GameLogic {
         this.config = {
             canvasWidth: 800,
             canvasHeight: 600,
-            maxDots: 20,
-            adaptationThreshold: 3,
+            maxDots: 25,
+            adaptationThreshold: 2,  // Reduced from 3 to 2
             cellSizes: {
                 lag: 15,
                 adapted: 20
             },
             speeds: {
-                lag: 2,
-                adapted: 5
+                base: 3              // Single speed for all phases
             },
             phaseThresholds: {
-                lag: 10,
-                exponential: 50,
-                stationary: 80
+                lag: 5,              // Lower threshold for faster progression
+                exponential: 20,     // Lower thresholds for faster game
+                stationary: 40
             },
             dotSpawnRates: {
-                lag: 0.05,
-                exponential: 0.1,
-                stationary: 0.02,
+                lag: 0.08,           // Increased spawn rate
+                exponential: 0.12,
+                stationary: 0.04,
                 death: 0.01
             }
         };
@@ -40,7 +39,7 @@ class GameLogic {
             x: Math.random() * (this.config.canvasWidth - 100) + 50,
             y: Math.random() * (this.config.canvasHeight - 100) + 50,
             size: this.config.cellSizes.lag,
-            speed: this.config.speeds.lag,
+            speed: this.config.speeds.base,  // Single speed
             direction: { x: 0, y: 0 },
             adaptationDots: 0,
             isAdapted: false,
@@ -49,21 +48,21 @@ class GameLogic {
         };
     }
 
-    // Create random colored dot
+    // Create ONLY GREEN DOTS now
     createDot() {
         return {
             id: this.generateId(),
             x: Math.random() * (this.config.canvasWidth - 40) + 20,
             y: Math.random() * (this.config.canvasHeight - 40) + 20,
             radius: 5,
-            type: Math.random() < 0.3 ? 'adaptation' : 'growth'
+            type: 'growth'  // All dots are now green growth dots
         };
     }
 
-    // Update cell position based on direction
+    // Update cell position based on direction (simplified speed)
     updateCellPosition(cell) {
         if (cell.direction.x !== 0 || cell.direction.y !== 0) {
-            const speed = cell.isAdapted ? this.config.speeds.adapted : this.config.speeds.lag;
+            const speed = this.config.speeds.base;  // Always same speed
             cell.x += cell.direction.x * speed;
             cell.y += cell.direction.y * speed;
             
@@ -142,26 +141,30 @@ class GameLogic {
         return false; // No dot collected
     }
 
-    // Handle what happens when a cell collects a dot
+    // Dot handling - All green dots help adaptation AND growth
+
     handleDotCollection(cell, dot, gameState) {
         cell.lastDotCollectTime = Date.now();
         
-        if (dot.type === 'adaptation') {
-            cell.adaptationDots++;
-            if (cell.adaptationDots >= this.config.adaptationThreshold && !cell.isAdapted) {
-                this.promoteCellToAdapted(cell);
-            }
-        } else if (dot.type === 'growth' && cell.isAdapted) {
-            // Exponential growth - spawn new cell!
+        // ALL DOTS NOW HELP BOTH ADAPTATION AND GROWTH
+        cell.adaptationDots++;
+        
+        if (cell.adaptationDots >= this.config.adaptationThreshold && !cell.isAdapted) {
+            this.promoteCellToAdapted(cell);
+        }
+        
+        // If adapted, spawn new cell
+        if (cell.isAdapted) {
             this.spawnNewCell(cell, gameState);
         }
     }
+
 
     // Promote cell from lag phase to adapted state
     promoteCellToAdapted(cell) {
         cell.isAdapted = true;
         cell.size = this.config.cellSizes.adapted;
-        cell.speed = this.config.speeds.adapted;
+        // Speed stays the same for all phases
         cell.color = '#00ffff'; // Cyan for adapted cells
     }
 
@@ -176,13 +179,13 @@ class GameLogic {
             x: parentCell.x + Math.cos(angle) * distance,
             y: parentCell.y + Math.sin(angle) * distance,
             size: this.config.cellSizes.adapted,
-            speed: this.config.speeds.adapted,
+            speed: this.config.speeds.base,  // Same speed
             direction: {
                 x: Math.cos(angle) + (Math.random() - 0.5) * 0.5,
                 y: Math.sin(angle) + (Math.random() - 0.5) * 0.5
             },
             adaptationDots: 0,
-            isAdapted: true,
+            isAdapted: true,  // New cells spawn already adapted
             color: parentCell.color,
             lastDotCollectTime: Date.now()
         };
@@ -214,13 +217,7 @@ class GameLogic {
     handlePhaseLogic(gameState) {
         const phase = gameState.phase;
         const population = gameState.cells.length;
-        
-        // Spawn dots based on phase
-        if (gameState.dots.length < this.config.maxDots && 
-            Math.random() < this.config.dotSpawnRates[phase]) {
-            gameState.dots.push(this.createDot());
-        }
-
+                
         // Phase-specific effects
         switch (phase) {
             case 'death':
@@ -240,17 +237,16 @@ class GameLogic {
                 break;
         }
 
-        // Cells starve if they don't collect dots for too long (except in lag phase)
-        if (phase !== 'lag') {
-            const currentTime = Date.now();
-            for (let i = gameState.cells.length - 1; i >= 0; i--) {
-                const cell = gameState.cells[i];
-                if (currentTime - cell.lastDotCollectTime > 30000) { // 30 seconds without food
-                    gameState.cells.splice(i, 1);
-                }
+        // Cells starve if they don't collect dots for too long
+        const currentTime = Date.now();
+        for (let i = gameState.cells.length - 1; i >= 0; i--) {
+            const cell = gameState.cells[i];
+            if (currentTime - cell.lastDotCollectTime > 5000) { 
+                gameState.cells.splice(i, 1);
             }
         }
     }
+
 
     // Update all game physics and logic
     updateGame(gameState) {
@@ -285,7 +281,8 @@ class GameLogic {
 
     // Initialize game with starting dots
     initializeGame(gameState) {
-        for (let i = 0; i < 15; i++) {
+        // Start with more dots since they won't spawn automatically
+        for (let i = 0; i < this.config.maxDots; i++) {
             gameState.dots.push(this.createDot());
         }
         gameState.phase = 'lag';
