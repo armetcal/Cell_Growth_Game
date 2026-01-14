@@ -5,7 +5,7 @@ class GameClient {
         this.chartCanvas = document.getElementById('growthChart');
         this.chartCtx = this.chartCanvas.getContext('2d');
         
-        this.socket = io('https://cellgrowthgame.up.railway.app');
+        this.socket = io();
         this.gameState = {
             cells: [],
             dots: [],
@@ -16,6 +16,7 @@ class GameClient {
         this.playerId = null;
         this.keys = {};
         this.lastUpdate = Date.now();
+        this.restartButton = document.getElementById('restartButton');
         
         this.init();
     }
@@ -43,6 +44,17 @@ class GameClient {
             document.getElementById('playerCount').textContent = count;
         });
 
+        // ADD RESTART HANDLERS
+        this.socket.on('gameRestarted', () => {
+            console.log('Game has been restarted');
+            // The next gameUpdate will contain the fresh game state
+        });
+        
+        this.socket.on('restartDenied', (message) => {
+            alert(`Restart denied: ${message}`);
+            this.restartButton.disabled = false;
+        });
+
         // Keyboard controls
         document.addEventListener('keydown', (e) => {
             this.keys[e.key] = true;
@@ -55,9 +67,27 @@ class GameClient {
             this.keys[e.key] = false;
         });
 
+        // Restart button handler
+        this.restartButton.addEventListener('click', () => {
+            this.restartGame();
+        });
+
         // Start game loop
         this.gameLoop();
         this.chartLoop();
+    }
+
+    // Add restart method
+    restartGame() {
+        if (confirm('Are you sure you want to restart the game? This will reset for all players.')) {
+            this.socket.emit('restartGame');
+            this.restartButton.disabled = true;
+            
+            // Re-enable button after 3 seconds to prevent spamming
+            setTimeout(() => {
+                this.restartButton.disabled = false;
+            }, 3000);
+        }
     }
 
     sendMovement() {
@@ -100,7 +130,7 @@ class GameClient {
 
         // Draw dots
         this.gameState.dots.forEach(dot => {
-            this.ctx.fillStyle = '#00ff00'; // green
+            this.ctx.fillStyle = '#00ff00'; // Always green
             this.ctx.beginPath();
             this.ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
             this.ctx.fill();

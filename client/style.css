@@ -65,3 +65,34 @@ h1 {
     border-radius: 5px;
     background: #111;
 }
+
+.restart-btn {
+    margin: 15px 0;
+    padding: 12px 24px;
+    font-size: 1.2em;
+    font-weight: bold;
+    background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+}
+
+.restart-btn:hover {
+    background: linear-gradient(135deg, #ff5252, #e53935);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+}
+
+.restart-btn:active {
+    transform: translateY(0);
+}
+
+.restart-btn:disabled {
+    background: #666;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}

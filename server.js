@@ -60,6 +60,32 @@ class MicrobialGame {
                 this.handlePlayerMovement(socket.id, direction);
             });
 
+            // ADD SIMPLE RESTART HANDLER
+            socket.on('restartGame', () => {
+                console.log(`Game restart requested by player: ${socket.id}`);
+                
+                // Simple restart - clear everything and restart
+                this.gameState = {
+                    cells: [],
+                    dots: [],
+                    players: this.gameState.players, // Keep player connections
+                    phase: 'lag',
+                    populationHistory: [],
+                    gameStartTime: Date.now()
+                };
+                
+                this.gameLogic.initializeGame(this.gameState);
+                
+                // Re-add all players
+                this.gameState.players.forEach((socket, playerId) => {
+                    const initialCell = this.gameLogic.createInitialCell(playerId);
+                    this.gameState.cells.push(initialCell);
+                });
+                
+                this.io.emit('gameRestarted');
+                this.io.emit('gameState', this.getClientGameState());
+            });
+
             socket.on('disconnect', () => {
                 console.log('Player disconnected:', socket.id);
                 this.removePlayer(socket.id);
